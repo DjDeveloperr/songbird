@@ -114,7 +114,17 @@ impl Restartable {
         path: P,
         lazy: bool,
     ) -> Result<Self> {
-        Self::new(FfmpegRestarter { path }, lazy).await
+        Self::new(FfmpegRestarter { path, pre_args: vec![], args: vec![] }, lazy).await
+    }
+    
+    /// Create a new restartable ffmpeg source for a local file with options.
+    pub async fn ffmpeg_optioned<P: AsRef<OsStr> + Send + Clone + Sync + 'static>(
+        path: P,
+        lazy: bool,
+        pre_args: Vec<String>,
+        args: Vec<String>,
+    ) -> Result<Self> {
+        Self::new(FfmpegRestarter { path, pre_args, args }, lazy).await
     }
 
     /// Create a new restartable ytdl source.
@@ -172,6 +182,8 @@ where
     P: AsRef<OsStr> + Send + Sync,
 {
     path: P,
+    pre_args: Vec<String>,
+    args: Vec<String>,
 }
 
 #[async_trait]
@@ -184,28 +196,75 @@ where
             let is_stereo = is_stereo(self.path.as_ref())
                 .await
                 .unwrap_or_else(|_e| (false, Default::default()));
-            let stereo_val = if is_stereo.0 { "2" } else { "1" };
+            let stereo_val = String::from(if is_stereo.0 { "2" } else { "1" });
 
             let ts = format!("{:.3}", time.as_secs_f64());
+            
+            let mut pre_args: Vec<String> = vec![];
+            let mut args: Vec<String> = vec![];
+            
+            for pre_arg in self.pre_args {
+                pre_args.push(pre_arg);
+            }
+            
+            for arg in self.args {
+                args.push(arg);
+            }
+            
+            pre_args.push("-ss");
+            pre_args.push(ts);
+            
+            args.push("-f");
+            args.push("s16le");
+            args.push("-ac");
+            args.push(stereo_val);
+            args.push("-ar");
+            args.push("48000");
+            args.push("-acodec");
+            args.push("pcm_f32le");
+            args.push("-");
+            
             _ffmpeg_optioned(
                 self.path.as_ref(),
-                &["-ss", &ts],
-                &[
-                    "-f",
-                    "s16le",
-                    "-ac",
-                    stereo_val,
-                    "-ar",
-                    "48000",
-                    "-acodec",
-                    "pcm_f32le",
-                    "-",
-                ],
+                pre_args.as_slice(),
+                args.as_slice(),
                 Some(is_stereo),
             )
             .await
         } else {
-            ffmpeg(self.path.as_ref()).await
+            let is_stereo = is_stereo(self.path.as_ref())
+                .await
+                .unwrap_or_else(|_e| (false, Default::default()));
+            let stereo_val = if is_stereo.0 { "2" } else { "1" };
+            
+            let mut pre_args: Vec<String> = vec![];
+            let mut args: Vec<String> = vec![];
+            
+            for pre_arg in self.pre_args {
+                pre_args.push(pre_arg);
+            }
+            
+            for arg in self.args {
+                args.push(arg);
+            }
+            
+            args.push("-f");
+            args.push("s16le");
+            args.push("-ac");
+            args.push(stereo_val);
+            args.push("-ar");
+            args.push("48000");
+            args.push("-acodec");
+            args.push("pcm_f32le");
+            args.push("-");
+            
+            _ffmpeg_optioned(
+                self.path.as_ref(),
+                pre_args.as_slice(),
+                args.as_slice(),
+                Some(is_stereo),
+            )
+            .await
         }
     }
 

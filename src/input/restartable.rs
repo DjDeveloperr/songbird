@@ -203,11 +203,11 @@ where
             let mut pre_args: Vec<&str> = vec![];
             let mut args: Vec<&str> = vec![];
             
-            for pre_arg in self.pre_args {
+            for pre_arg in &self.pre_args {
                 pre_args.push(pre_arg.as_str());
             }
             
-            for arg in self.args {
+            for arg in &self.args {
                 args.push(arg.as_str());
             }
             
@@ -240,11 +240,11 @@ where
             let mut pre_args: Vec<&str> = vec![];
             let mut args: Vec<&str> = vec![];
             
-            for pre_arg in self.pre_args {
+            for pre_arg in &self.pre_args {
                 pre_args.push(pre_arg.as_str());
             }
             
-            for arg in self.args {
+            for arg in &self.args {
                 args.push(arg.as_str());
             }
             

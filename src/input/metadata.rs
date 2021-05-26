@@ -36,7 +36,6 @@ impl Metadata {
     /// Extract metadata and details from the output of
     /// `ffprobe`.
     pub fn from_ffprobe_json(value: &Value) -> Self {
-        println!("value {:?}", value);
         let format = value.as_object().and_then(|m| m.get("format"));
 
         let duration = format
@@ -49,7 +48,7 @@ impl Metadata {
             .and_then(|m| m.get("start_time"))
             .and_then(Value::as_str)
             .and_then(|v| v.parse::<f64>().ok())
-            .map(Duration::from_secs_f64);
+            .map(|v| Duration::from_secs_f64(if v < 0 { 0 } else { v }));
 
         let tags = format.and_then(|m| m.get("tags"));
 

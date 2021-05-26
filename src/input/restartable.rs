@@ -196,23 +196,23 @@ where
             let is_stereo = is_stereo(self.path.as_ref())
                 .await
                 .unwrap_or_else(|_e| (false, Default::default()));
-            let stereo_val = String::from(if is_stereo.0 { "2" } else { "1" });
+            let stereo_val = if is_stereo.0 { "2" } else { "1" };
 
             let ts = format!("{:.3}", time.as_secs_f64());
             
-            let mut pre_args: Vec<String> = vec![];
-            let mut args: Vec<String> = vec![];
+            let mut pre_args: Vec<&str> = vec![];
+            let mut args: Vec<&str> = vec![];
             
             for pre_arg in self.pre_args {
-                pre_args.push(pre_arg);
+                pre_args.push(pre_arg.as_str());
             }
             
             for arg in self.args {
-                args.push(arg);
+                args.push(arg.as_str());
             }
             
             pre_args.push("-ss");
-            pre_args.push(ts);
+            pre_args.push(ts.as_str());
             
             args.push("-f");
             args.push("s16le");
@@ -237,15 +237,15 @@ where
                 .unwrap_or_else(|_e| (false, Default::default()));
             let stereo_val = if is_stereo.0 { "2" } else { "1" };
             
-            let mut pre_args: Vec<String> = vec![];
-            let mut args: Vec<String> = vec![];
+            let mut pre_args: Vec<&str> = vec![];
+            let mut args: Vec<&str> = vec![];
             
             for pre_arg in self.pre_args {
-                pre_args.push(pre_arg);
+                pre_args.push(pre_arg.as_str());
             }
             
             for arg in self.args {
-                args.push(arg);
+                args.push(arg.as_str());
             }
             
             args.push("-f");
